@@ -16,44 +16,27 @@ load_dotenv()
 # FFMPEG CONFIGURATION
 # ============================================================
 
-FFMPEG_LOCATION = r"C:\ffmpeg\bin"
+# ============================================================
+# FFMPEG CONFIGURATION
+# ============================================================
 
-FFMPEG_EXE = os.path.join(
-    FFMPEG_LOCATION,
-    "ffmpeg.exe"
-)
+FFMPEG_EXE = shutil.which("ffmpeg")
+FFPROBE_EXE = shutil.which("ffprobe")
 
-FFPROBE_EXE = os.path.join(
-    FFMPEG_LOCATION,
-    "ffprobe.exe"
-)
-
-
-# Verify FFmpeg files exist
-if not os.path.isfile(FFMPEG_EXE):
+if not FFMPEG_EXE:
     raise FileNotFoundError(
-        f"FFmpeg not found at: {FFMPEG_EXE}"
+        "FFmpeg not found. Make sure FFmpeg is installed "
+        "and available in PATH."
     )
 
-if not os.path.isfile(FFPROBE_EXE):
+if not FFPROBE_EXE:
     raise FileNotFoundError(
-        f"FFprobe not found at: {FFPROBE_EXE}"
+        "FFprobe not found. Make sure FFmpeg is installed "
+        "and available in PATH."
     )
 
-
-# Add FFmpeg directory to PATH
-os.environ["PATH"] = (
-    FFMPEG_LOCATION
-    + os.pathsep
-    + os.environ.get("PATH", "")
-)
-
-
-# Verify Python can find FFmpeg
-print(
-    f"FFmpeg detected at: {shutil.which('ffmpeg')}"
-)
-
+print(f"FFmpeg detected at: {FFMPEG_EXE}")
+print(f"FFprobe detected at: {FFPROBE_EXE}")
 
 # Tell pydub explicitly
 AudioSegment.converter = FFMPEG_EXE
