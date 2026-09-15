@@ -36,6 +36,8 @@ st.set_page_config(
 # CUSTOM CSS
 # ============================================================
 
+# ============================================================
+
 st.markdown(
     """
     <style>
@@ -231,7 +233,6 @@ with st.sidebar:
         "System operational"
     )
 
-
 # ============================================================
 # HEADER
 # ============================================================
@@ -250,6 +251,21 @@ with header_col:
         "Transform videos and lectures into structured AI insights."
     )
 
+    st.markdown(
+        """
+        <div style="
+            color: #737b8f;
+            font-size: 12px;
+            margin-top: -8px;
+        ">
+            Developed by <b style="color: #9da5b8;">
+                Dharmesh Sharma
+            </b>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
 
 with button_col:
 
@@ -264,8 +280,6 @@ with button_col:
         st.session_state.chat_history = []
 
         st.rerun()
-
-
 # ============================================================
 # INPUT SECTION
 # ============================================================
