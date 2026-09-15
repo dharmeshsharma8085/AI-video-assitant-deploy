@@ -1,9 +1,8 @@
 🤖 AI Video Assistant
 
 <p align="center">
-  <img src="assets/app-screenshot.png" alt="AI Video Assistant Dashboard" width="100%">
+  <img src="asset/app-screenshot.png" alt="AI Video Assistant Dashboard" width="100%">
 </p>
-
 <p align="center">
   <b>AI-powered video and meeting analysis with transcription, RAG, and interactive chat.</b>
 </p>
