@@ -11,12 +11,14 @@ torchaudio>=2.2.0
 # Translation
 deep-translator>=1.11.4
 
-# LangChain + Mistral
+# LangChain + Mistral + OpenAI
 langchain>=0.2.0
 langchain-core>=0.2.0
 langchain-community>=0.2.0
 langchain-mistralai>=0.1.0
+langchain-openai>=0.1.0
 mistralai>=0.4.0
+
 
 # RAG
 chromadb>=0.5.0
