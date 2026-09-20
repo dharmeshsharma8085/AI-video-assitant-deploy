@@ -15,19 +15,23 @@ from pydub import AudioSegment
 FFMPEG_EXE = shutil.which("ffmpeg")
 FFPROBE_EXE = shutil.which("ffprobe")
 
+
 if not FFMPEG_EXE:
     raise FileNotFoundError(
         "FFmpeg not found in PATH."
     )
+
 
 if not FFPROBE_EXE:
     raise FileNotFoundError(
         "FFprobe not found in PATH."
     )
 
-# Tell pydub where FFmpeg is
+
+# Tell Pydub where FFmpeg is located
 AudioSegment.converter = FFMPEG_EXE
 AudioSegment.ffprobe = FFPROBE_EXE
+
 
 DOWNLOAD_DIR = "downloads"
 
@@ -54,26 +58,16 @@ def download_youtube_audio(
         "%(title)s.%(ext)s"
     )
 
+
     ydl_opts = {
 
-        # Prefer HLS audio first
-        "format": (
-            "bestaudio[protocol^=m3u8]/"
-            "bestaudio/best"
-        ),
+        # Let yt-dlp choose an available audio format
+        "format": "bestaudio/best",
 
+        # Output filename
         "outtmpl": output_path,
 
-        # YouTube player client
-        "extractor_args": {
-            "youtube": {
-                "player_client": [
-                    "web_safari"
-                ]
-            }
-        },
-
-        # FFmpeg executable
+        # FFmpeg path
         "ffmpeg_location": FFMPEG_EXE,
 
         # Convert downloaded audio to WAV
@@ -84,9 +78,16 @@ def download_youtube_audio(
             }
         ],
 
-        "quiet": True,
+        # Do not download playlist
         "noplaylist": True,
+
+        # Keep terminal output clean
+        "quiet": True,
+
+        # No unnecessary warnings
+        "no_warnings": True,
     }
+
 
     try:
 
@@ -103,6 +104,7 @@ def download_youtube_audio(
                 info
             )
 
+
     except Exception as e:
 
         raise RuntimeError(
@@ -110,7 +112,7 @@ def download_youtube_audio(
         ) from e
 
 
-    # FFmpeg creates WAV
+    # FFmpeg converts the downloaded file to WAV
     wav_path = (
         os.path.splitext(filename)[0]
         + ".wav"
@@ -158,23 +160,34 @@ def convert_to_wav(
     )
 
 
-    audio = AudioSegment.from_file(
-        input_path
-    )
+    try:
+
+        audio = AudioSegment.from_file(
+            input_path
+        )
 
 
-    # Convert to mono 16 kHz
-    audio = (
-        audio
-        .set_channels(1)
-        .set_frame_rate(16000)
-    )
+        # Convert to:
+        # Mono
+        # 16 kHz
+        audio = (
+            audio
+            .set_channels(1)
+            .set_frame_rate(16000)
+        )
 
 
-    audio.export(
-        output_path,
-        format="wav"
-    )
+        audio.export(
+            output_path,
+            format="wav"
+        )
+
+
+    except Exception as e:
+
+        raise RuntimeError(
+            f"Failed to convert file to WAV: {e}"
+        ) from e
 
 
     return output_path
@@ -190,6 +203,9 @@ def chunk_audio(
 ) -> list:
     """
     Split WAV audio into smaller chunks.
+
+    Default chunk size:
+    10 minutes
     """
 
     if not os.path.exists(
@@ -265,10 +281,13 @@ def process_input(
     source: str
 ) -> list:
     """
-    Process either a YouTube URL or
-    a local audio/video file.
+    Process either:
 
-    Returns a list of WAV chunks.
+    1. YouTube URL
+    2. Local audio/video file
+
+    Returns:
+        list of WAV chunk paths
     """
 
     if not source:
@@ -279,7 +298,7 @@ def process_input(
 
 
     # --------------------------------------------------------
-    # YouTube
+    # YouTube URL
     # --------------------------------------------------------
 
     if (
@@ -290,6 +309,7 @@ def process_input(
         print(
             "Detected YouTube URL."
         )
+
 
         print(
             "Downloading audio..."
@@ -304,7 +324,7 @@ def process_input(
 
 
     # --------------------------------------------------------
-    # Local file
+    # Local File
     # --------------------------------------------------------
 
     else:
@@ -312,6 +332,7 @@ def process_input(
         print(
             "Detected local file."
         )
+
 
         print(
             "Converting to WAV..."
@@ -326,7 +347,7 @@ def process_input(
 
 
     # --------------------------------------------------------
-    # Chunking
+    # Chunk Audio
     # --------------------------------------------------------
 
     print(
