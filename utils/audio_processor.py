@@ -1,30 +1,33 @@
 # utils/audio_processor.py
 
 import os
+import shutil
 
 import yt_dlp
 
 from pydub import AudioSegment
-from pydub.utils import which
 
 
 # ============================================================
 # CONFIGURATION
 # ============================================================
 
-FFMPEG_LOCATION = r"C:\ffmpeg\bin"
+FFMPEG_EXE = shutil.which("ffmpeg")
+FFPROBE_EXE = shutil.which("ffprobe")
 
-# Tell pydub exactly where FFmpeg is.
-AudioSegment.converter = os.path.join(
-    FFMPEG_LOCATION,
-    "ffmpeg.exe"
-)
+if not FFMPEG_EXE:
+    raise FileNotFoundError(
+        "FFmpeg not found in PATH."
+    )
 
-AudioSegment.ffprobe = os.path.join(
-    FFMPEG_LOCATION,
-    "ffprobe.exe"
-)
+if not FFPROBE_EXE:
+    raise FileNotFoundError(
+        "FFprobe not found in PATH."
+    )
 
+# Tell pydub where FFmpeg is
+AudioSegment.converter = FFMPEG_EXE
+AudioSegment.ffprobe = FFPROBE_EXE
 
 DOWNLOAD_DIR = "downloads"
 
@@ -42,8 +45,8 @@ def download_youtube_audio(
     url: str
 ) -> str:
     """
-    Download YouTube audio and convert it
-    to WAV using FFmpeg.
+    Download YouTube audio and convert
+    it to WAV using FFmpeg.
     """
 
     output_path = os.path.join(
@@ -51,16 +54,29 @@ def download_youtube_audio(
         "%(title)s.%(ext)s"
     )
 
-
     ydl_opts = {
 
-        "format": "bestaudio/best",
+        # Prefer HLS audio first
+        "format": (
+            "bestaudio[protocol^=m3u8]/"
+            "bestaudio/best"
+        ),
 
         "outtmpl": output_path,
 
-        # Explicit FFmpeg location
-        "ffmpeg_location": FFMPEG_LOCATION,
+        # YouTube player client
+        "extractor_args": {
+            "youtube": {
+                "player_client": [
+                    "web_safari"
+                ]
+            }
+        },
 
+        # FFmpeg executable
+        "ffmpeg_location": FFMPEG_EXE,
+
+        # Convert downloaded audio to WAV
         "postprocessors": [
             {
                 "key": "FFmpegExtractAudio",
@@ -69,24 +85,32 @@ def download_youtube_audio(
         ],
 
         "quiet": True,
+        "noplaylist": True,
     }
 
+    try:
 
-    with yt_dlp.YoutubeDL(
-        ydl_opts
-    ) as ydl:
+        with yt_dlp.YoutubeDL(
+            ydl_opts
+        ) as ydl:
 
-        info = ydl.extract_info(
-            url,
-            download=True
-        )
+            info = ydl.extract_info(
+                url,
+                download=True
+            )
 
-        filename = ydl.prepare_filename(
-            info
-        )
+            filename = ydl.prepare_filename(
+                info
+            )
+
+    except Exception as e:
+
+        raise RuntimeError(
+            f"YouTube download failed: {e}"
+        ) from e
 
 
-    # FFmpeg creates the WAV file
+    # FFmpeg creates WAV
     wav_path = (
         os.path.splitext(filename)[0]
         + ".wav"
@@ -115,7 +139,7 @@ def convert_to_wav(
 ) -> str:
     """
     Convert any supported audio/video file
-    to WAV using pydub + FFmpeg.
+    to WAV using Pydub + FFmpeg.
     """
 
     if not os.path.exists(
@@ -139,9 +163,7 @@ def convert_to_wav(
     )
 
 
-    # Convert to:
-    # Mono
-    # 16 kHz
+    # Convert to mono 16 kHz
     audio = (
         audio
         .set_channels(1)
@@ -183,8 +205,7 @@ def chunk_audio(
     if chunk_minutes <= 0:
 
         raise ValueError(
-            "chunk_minutes must be "
-            "greater than 0"
+            "chunk_minutes must be greater than 0"
         )
 
 
